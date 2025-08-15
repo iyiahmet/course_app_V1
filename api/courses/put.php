@@ -1,5 +1,6 @@
 <?php
-include "db.php";
+require_once "../../config/db.php";
+require_once "../../helpers/response.php";
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: PUT");
@@ -11,23 +12,24 @@ if ($_SERVER["REQUEST_METHOD"] != "PUT") {
     exit;
 } else {
     $data = json_decode(file_get_contents("php://input"), true);
-    if (!$data || !isset($data['id']) || !isset($data['new_course_name'])) {
+    if (!$data || !isset($data['id']) || !isset($data['courseName'])) {
         http_response_code(400);
         echo json_encode(array("message" => "Invalid request"));
         exit;
     } else {
         $id = $data['id'];
-        $new_course_name = $data['new_course_name'];
+        $courseName = $data['courseName'];
+        $db = get_db();
 
-        $putquery = $db->prepare("UPDATE courses SET course_name = :new_course_name WHERE id = :id");
+        $putquery = $db->prepare("UPDATE courses SET course_name = :courseName WHERE id = :id");
 
         if ($putquery->execute(array(
-            ":new_course_name" => $new_course_name,
+            ":courseName" => $courseName,
             ":id" => $id
         ))) {
-            $course_table = $db->prepare("SELECT * FROM courses")->fetchAll();
+
             http_response_code(200);
-            echo json_encode(array("message" => "Course updated successfully", "course_table" => $course_table));
+            sendjson(array("message" => "Course updated successfully"));
         }
     }
 }
